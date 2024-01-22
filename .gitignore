@@ -1,0 +1,9 @@
+*
+!*.*
+!*/
+!makefile
+!ZEROS
+*.s
+*.o
+*.i
+*.ii
