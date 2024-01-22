@@ -1,13 +1,20 @@
 CXX = g++
-CFLAGS = -Wall -O -save-temps
+CFLAGS = -Wall -O3
 
-SRC= RiemannSiegel.cpp
+SRC= RiemannSiegel_opti.cpp
 BIN= $(SRC:.cpp=)
 
-# Runned using "make" only
+SRC_NO_OPT= RiemannSiegel.cpp
+BIN_NO_OPT= $(SRC_NO_OPT:.cpp=)
+
+# "make" => Compile the optimised file
 all:
 	$(CXX) $(CFLAGS) $(SRC) -o $(BIN)
 
-# Runned using "make clean"
+# "make no_opt" => Compile the base src file
+no_opt:
+	$(CXX) $(CFLAGS) $(SRC_NO_OPT) -o $(BIN_NO_OPT)
+
+# "make clean" => Clean build files
 clean: 
-	rm $(BIN) *.o *.i *.s 
+	rm -rf $(BIN) $(BIN_NO_OPT) *.o *.i *.s *.ii
