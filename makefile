@@ -1,9 +1,14 @@
+# C++ Compiler
 CXX = g++
-CFLAGS = -Wall -O3
 
+# Optimised variables
+CFLAGS = -Wall -O3
 SRC= RiemannSiegel_opti.cpp
 BIN= $(SRC:.cpp=)
 
+
+# Non-optimised variables
+CFLAGS_NO_OPT = -Wall -O
 SRC_NO_OPT= RiemannSiegel.cpp
 BIN_NO_OPT= $(SRC_NO_OPT:.cpp=)
 
@@ -13,7 +18,7 @@ all:
 
 # "make no_opt" => Compile the base src file
 no_opt:
-	$(CXX) $(CFLAGS) $(SRC_NO_OPT) -o $(BIN_NO_OPT)
+	$(CXX) $(CFLAGS_NO_OPT) $(SRC_NO_OPT) -o $(BIN_NO_OPT)
 
 # "make clean" => Clean build files
 clean: 
