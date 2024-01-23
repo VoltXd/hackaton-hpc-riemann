@@ -2,7 +2,7 @@
 CXX = g++
 
 # Optimised variables
-CFLAGS = -Wall -O3
+CFLAGS = -Wall -Ofast
 SRC= RiemannSiegel_opti.cpp
 BIN= $(SRC:.cpp=)
 
