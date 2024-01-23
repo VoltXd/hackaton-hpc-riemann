@@ -374,7 +374,7 @@ int main(int argc,char **argv)
 {
 	double LOWER,UPPER,SAMP;
 	//tests_zeros();
-	test_fileof_zeros("ZEROS");
+	// test_fileof_zeros("ZEROS");
 	try 
 	{
 		LOWER=std::atof(argv[1]);
@@ -403,8 +403,7 @@ int main(int argc,char **argv)
 	for (double t=LOWER;t<=UPPER;t+=STEP)
 	{
 		double zout=Z(t);
-		if(   ((zout<0.0)and(prev>0.0))
-			||((zout>0.0)and(prev<0.0)))
+		if(((prev>0.0) && (zout<0.0)) || ((prev<0.0) && (zout>0.0)))
 		{
 			//printf("%20.6lf  %20.12lf %20.12lf\n",t,prev,zout);
 			count++;
