@@ -1,8 +1,8 @@
 # C++ Compiler
-CXX = g++
+CXX = armclang++
 
 # Optimised variables
-CFLAGS = -Wall -Ofast
+CFLAGS = -Wall -Ofast -mcpu=native
 SRC= RiemannSiegel_opti.cpp
 BIN= $(SRC:.cpp=)
 
@@ -19,6 +19,15 @@ all:
 # "make no_opt" => Compile the base src file
 no_opt:
 	$(CXX) $(CFLAGS_NO_OPT) $(SRC_NO_OPT) -o $(BIN_NO_OPT)
+
+# "make asm" => Outputs the assembly of both files
+asm:
+	$(CXX) $(CFLAGS) -fverbose-asm $(SRC) -S
+	$(CXX) $(CFLAGS_NO_OPT) -fverbose-asm $(SRC_NO_OPT) -S
+
+# "make debug" => Compile with debug info
+debug:
+	$(CXX) $(CFLAGS) $(SRC) -g -o $(BIN)
 
 # "make clean" => Clean build files
 clean: 
