@@ -336,10 +336,11 @@ void test_fileof_zeros(const char *fname)
 	FILE *fi=fopen(fname,"r");
 	assert(fi!=NULL);
 	for(;;){
+		int idx;
 		double t,RS;
 		fgets(line,1000,fi);
 		if(feof(fi))break;
-		sscanf(line,"%lf",&t);
+		sscanf(line,"%d %lf", &idx, &t);
 		RS=Z(t,4);
 		printf(" %30.20lf %30.20lf   %s",t,RS,line);
 
