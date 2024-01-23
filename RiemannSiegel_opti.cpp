@@ -62,8 +62,17 @@ Compute time 1 year-core so an algortihm 10000*2*40 times more efficient than Ze
 * *
 *************************************************************************/
 
+// Typedefs
 typedef unsigned long      ui32;
 typedef unsigned long long ui64;
+
+// Constants
+constexpr double PI = 3.1415926535897932385; 
+constexpr double PI2 = 2.0 * 3.1415926535897932385; 
+constexpr double PI_2 = 3.1415926535897932385 / 2.0;
+constexpr double INV_PI = 1.0 / PI; 
+constexpr double INV_PI2 = 1.0 / PI2; 
+
 
 double dml_micros()
 {
@@ -73,16 +82,21 @@ double dml_micros()
         return((tv.tv_sec*1000000.0)+tv.tv_usec);
 }
 
-int even(int n)
+inline int even(int n)
 {
-	if (n%2 == 0) return(1);
-	else          return(-1);
+	return n & 1 ? -1 : 1;
+	// if (n%2 == 0) return(1);
+	// else          return(-1);
 }
 
 double theta(double t)
 {
-	const double pi = 3.1415926535897932385;
-	return(t/2.0*log(t/2.0/pi) - t/2.0 - pi/8.0 + 1.0/48.0/t + 7.0/5760.0/pow(t,3.0) + 31.0/80640.0/powl(t,5.0) +127.0/430080.0/powl(t,7.0)+511.0/1216512.0/powl(t,9.0));
+	double t_inv = 1.0 / t;
+	double t_inv3 = t_inv * t_inv * t_inv;
+	double t_inv5 = t_inv3 * t_inv * t_inv;
+	double t_inv7 = t_inv5 * t_inv * t_inv;
+	double t_inv9 = t_inv7 * t_inv * t_inv;
+	return t*0.5*(log(t*INV_PI2) - 1.0) - PI/8.0 + (1.0/48.0)*t_inv + (7.0/5760.0)*t_inv3 + (31.0/80640.0)*t_inv5 + (127.0/430080.0)*t_inv7 + (511.0/1216512.0)*t_inv9;
 	//https://oeis.org/A282898  // numerators
 	//https://oeis.org/A114721  // denominators
 }
@@ -214,28 +228,36 @@ else
 			+.00000000000000000004 * pow(z,48.0));
 }
 
-double Z(double t, int n)
+double Z(double t)
 //*************************************************************************
 // Riemann-Siegel Z(t) function implemented per the Riemenn Siegel formula.
 // See http://mathworld.wolfram.com/Riemann-SiegelFormula.html for details
 //*************************************************************************
 {
-	double p; /* fractional part of sqrt(t/(2.0*pi))*/
-	double C(int,double); /* coefficient of (2*pi/t)^(k*0.5) */
-	const double pi = 3.1415926535897932385; 
-	int N = sqrt(t/(2.0 * pi)); 
-	p = sqrt(t/(2.0 * pi)) - N; 
+	double p = sqrt(t * INV_PI2); /* fractional part of sqrt(t/(2.0*PI))*/
+	const int N = (int)p; 	// Get integer part
+	p -= N; 				// Get fractionnal part
+
+	// ZZ part
 	double tt = theta(t); 
 	double ZZ = 0.0; 
-	for (int j=1;j <= N;j++) {
-		ZZ = ZZ + 1.0/sqrt((double) j ) * cos(fmod(tt -t*log((double) j),2.0*pi));
-	} 
-	ZZ = 2.0 * ZZ; 
+	for (int j=1; j <= N; j++)
+		ZZ += cos(fmod(tt - t*log((double)j), PI2)) / sqrt((double)j);
+	ZZ += ZZ; 
+
+	// R part
+	const double z = 2.0*p-1.0;
+	const double PI2_T = PI2 / t;
+	const double SQRT_PI2_T = sqrt(PI2_T);
+
 	double R  = 0.0; 
-	for (int k=0;k <= n;k++) {
-		R = R + C(k,2.0*p-1.0) * pow(2.0*pi/t, ((double) k)*0.5);
-	} 
-	R = even(N-1) * pow(2.0 * pi / t,0.25) * R; 
+	R += C(0,z);
+	R += C(1,z) * SQRT_PI2_T;
+	R += C(2,z) * PI2_T;
+	R += C(3,z) * PI2_T * SQRT_PI2_T;
+	R += C(4,z) * PI2_T * PI2_T;
+	R *= even(N-1) * sqrt(SQRT_PI2_T); 
+
 	return(ZZ + R);
 }
 
@@ -291,7 +313,7 @@ std::complex <double> test_zerod(const double zero,const int N)
 
 void test_one_zero(double t)
 {
-	double RS=Z(t,4);
+	double RS=Z(t);
 	std::complex <double> c1=test_zerod(t,10);
 	std::complex <double> c2=test_zerod(t,100);
 	std::complex <double> c3=test_zerod(t,1000);
@@ -341,7 +363,7 @@ void test_fileof_zeros(const char *fname)
 		fgets(line,1000,fi);
 		if(feof(fi))break;
 		sscanf(line,"%d %lf",&idx, &t);
-		RS=Z(t,4);
+		RS=Z(t);
 		printf(" %30.20lf %30.20lf   %s",t,RS,line);
 
 	}
@@ -351,39 +373,46 @@ void test_fileof_zeros(const char *fname)
 int main(int argc,char **argv)
 {
 	double LOWER,UPPER,SAMP;
-	const double pi = 3.1415926535897932385;
 	//tests_zeros();
-	//test_fileof_zeros("ZEROS");
-	try {
+	test_fileof_zeros("ZEROS");
+	try 
+	{
 		LOWER=std::atof(argv[1]);
 		UPPER=std::atof(argv[2]);
 		SAMP =std::atof(argv[3]);
 	}
-	catch (...) {
-                std::cout << argv[0] << " START END SAMPLING" << std::endl;
-                return -1;
-        }
-	double estimate_zeros=theta(UPPER)/pi;
-	printf("I estimate I will find %1.3lf zeros\n",estimate_zeros);
+	catch (...) 
+	{
+		std::cout << argv[0] << " START END SAMPLING" << std::endl;
+		return -1;
+	}
+	if (SAMP < 0 || LOWER > UPPER)
+	{
+		printf("ERROR::Bad_Arguments: (SAMPLING < 0) OR (LOWER > UPPER)\n");
+		return EXIT_FAILURE;
+	}
 
+	double estimate_zeros=theta(UPPER)/PI;
+	printf("I estimate I will find %1.3lf zeros\n",estimate_zeros);
+		
 	double STEP = 1.0/SAMP;
 	ui64   NUMSAMPLES=floor((UPPER-LOWER)*SAMP+1.0);
 	double prev=0.0;
-	double count=0.0;
+	ui64 count=0;
 	double t1=dml_micros();
-	for (double t=LOWER;t<=UPPER;t+=STEP){
-		double zout=Z(t,4);
-		if(t>LOWER){
-			if(   ((zout<0.0)and(prev>0.0))
-			    or((zout>0.0)and(prev<0.0))){
-				//printf("%20.6lf  %20.12lf %20.12lf\n",t,prev,zout);
-				count++;
-			}
+	for (double t=LOWER;t<=UPPER;t+=STEP)
+	{
+		double zout=Z(t);
+		if(   ((zout<0.0)and(prev>0.0))
+			||((zout>0.0)and(prev<0.0)))
+		{
+			//printf("%20.6lf  %20.12lf %20.12lf\n",t,prev,zout);
+			count++;
 		}
 		prev=zout;
 	}
 	double t2=dml_micros();
-	printf("I found %1.0lf Zeros in %.3lf seconds\n",count,(t2-t1)/1000000.0);
+	printf("I found %1.0llu Zeros in %.3lf seconds\n",count,(t2-t1)/1000000.0);
 	return(0);
 }
 
