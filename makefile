@@ -6,6 +6,10 @@ CFLAGS = -Wall -Ofast -mcpu=native
 SRC= RiemannSiegel_opti.cpp
 BIN= $(SRC:.cpp=)
 
+# parallel variables
+CFLAGS_PARA = -Wall -Ofast -armpl=parallel -fopenmp -mcpu=native
+SRC_PARA= RiemannSiegel_para.cpp
+BIN_PARA= $(SRC_PARA:.cpp=)
 
 # Non-optimised variables
 CFLAGS_NO_OPT = -Wall -O
@@ -15,6 +19,10 @@ BIN_NO_OPT= $(SRC_NO_OPT:.cpp=)
 # "make" => Compile the optimised file
 all:
 	$(CXX) $(CFLAGS) $(SRC) -o $(BIN)
+
+# "make para" => Compile the parallelized file
+para:
+	$(CXX) $(CFLAGS_PARA) $(SRC_PARA) -o $(BIN_PARA)
 
 # "make no_opt" => Compile the base src file
 no_opt:
@@ -31,4 +39,4 @@ debug:
 
 # "make clean" => Clean build files
 clean: 
-	rm -rf $(BIN) $(BIN_NO_OPT) *.o *.i *.s *.ii
+	rm -rf $(BIN) $(BIN_NO_OPT) $(BIN_PARA) *.o *.i *.s *.ii
