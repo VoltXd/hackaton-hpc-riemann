@@ -71,7 +71,7 @@ constexpr double PI = 3.1415926535897932385;
 constexpr double PI2 = 2.0 * 3.1415926535897932385; 
 constexpr double PI_2 = 3.1415926535897932385 / 2.0;
 constexpr double INV_PI = 1.0 / PI; 
-constexpr double INV_PI2 = 1.0 / PI2; 
+constexpr double INV_PI2 = 0.5 / PI; 
 
 
 double dml_micros()
