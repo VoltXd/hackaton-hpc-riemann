@@ -92,13 +92,8 @@ double theta(double t)
 {
 	//const double pi = 3.1415926535897932385;
 	double t_inv = 1.0/ t;
-/*	double t_inv3= t_inv * t_inv * t_inv;
-	double t_inv5= t_inv3 * t_inv * t_inv;
-	double t_inv7= t_inv5 * t_inv * t_inv;
-	double t_inv9= t_inv7 * t_inv * t_inv;
-*/	double t_inv2 = t_inv*t_inv;
+	double t_inv2 = t_inv*t_inv;
  	return (t*0.5*log(t*invdeuxpi) - t*0.5 - pi*0.125 +t_inv*( 1/48.0 + t_inv2*( 7.0/5760.0 + t_inv2*( 31.0/80640 +t_inv2*( 127.0/430080.0 + t_inv2*(511.0/1216512.0 ))))) );
-//	return(t*0.5*log(t*invdeuxpi) - t*0.5 - pi*0.125 + (1.0/48.0)*t_inv + (7.0/5760.0)*t_inv3 + (31.0/80640.0)*t_inv5+(127.0/430080.0)*t_inv7+(511.0/1216512.0)*t_inv9);
 	//https://oeis.org/A282898  // numerators
 	//https://oeis.org/A114721  // denominators
 }
@@ -249,20 +244,17 @@ double Z(double t)
 	const double z=2.0*p-1.0;
 //	const double deuxpiT=deuxpi/t;
 	double R = 0.0;
+	// ZZ part
 	double tt = theta(t);
 	double ZZ = 0.0;
 	//std::cout<<"N = "<<N<<std::endl;
-/*
-	for (double j=1;j <= N;j++) {
-		ZZ += 1.0/sqrt(j) * cos(fmod(tt -t*log(j),deuxpi));
-	}
-*/
+
 	for(double j=1; j<=N-restN;j+=4){
 
 		ZZ+= 1/sqrt(j) * cos(fmod(tt-t*log(j),deuxpi));
-                ZZ+= 1/sqrt(j+1) * cos(fmod(tt-t*log(j+1),deuxpi));
-                ZZ+= 1/sqrt(j+2) * cos(fmod(tt-t*log(j+2),deuxpi));
-                ZZ+= 1/sqrt(j+3) * cos(fmod(tt-t*log(j+3),deuxpi));
+		ZZ+= 1/sqrt(j+1) * cos(fmod(tt-t*log(j+1),deuxpi));
+		ZZ+= 1/sqrt(j+2) * cos(fmod(tt-t*log(j+2),deuxpi));
+		ZZ+= 1/sqrt(j+3) * cos(fmod(tt-t*log(j+3),deuxpi));
 		epilogue+=4;
 
 	}
@@ -273,9 +265,8 @@ double Z(double t)
 	}
 
 	ZZ += ZZ; 
-	//for (int k=0;k <= n;k++) {
-	//	R = R + C(k,2.0*p-1.0) * pow(deuxpi/t, ((double)k)*0.5);
-	//}
+
+	// R part
 	R+= C(0,z);
 	R+= C(1,z) * sqrt(deuxpi/t);
 	R+= C(2,z) * deuxpi/t;
@@ -346,17 +337,16 @@ void test_one_zero(double t)
 	std::complex <double> c2=test_zerod(t,100);
 	std::complex <double> c3=test_zerod(t,1000);
 	std::cout << std::setprecision(15);
-        std::cout << "RS= "<<" "<<RS<<" TEST10= "<< c1 << " TEST100=" << c2 << " TEST1000=" << c3 << std::endl;
+    std::cout << "RS= "<<" "<<RS<<" TEST10= "<< c1 << " TEST100=" << c2 << " TEST1000=" << c3 << std::endl;
 	
 }
 
 void tests_zeros()
 {
 	test_one_zero(14.1347251417346937904572519835625);
-        test_one_zero(101.3178510057313912287854479402924);
-        test_one_zero(1001.3494826377827371221033096531063);
-        test_one_zero(10000.0653454145353147502287213889928);
-
+	test_one_zero(101.3178510057313912287854479402924);
+	test_one_zero(1001.3494826377827371221033096531063);
+	test_one_zero(10000.0653454145353147502287213889928);
 }
 
 /*
@@ -422,14 +412,17 @@ int main(int argc,char **argv)
 	double cmp = LOWER;
 	//double cmpprev = LOWER-STEP;
 	std::vector<double[2]> zout(NUMSAMPLES);
+	/*
 	for (int t=0; t<NUMSAMPLES; t++){
 
 		zout[t][0]=cmp;
 		cmp+=STEP;
 		//std::cout<<"cmp = "<<cmp<< std::endl;
 	}
+	*/
 	#pragma omp parallel for
 	for(int t=0; t<NUMSAMPLES; t++){
+		zout[t][0]=LOWER + t*STEP;
 		zout[t][1]=Z(zout[t][0]);
 	}
 	#pragma omp parallel for
