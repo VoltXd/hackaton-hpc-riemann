@@ -411,7 +411,7 @@ int main(int argc,char **argv)
 	double t1=dml_micros();
 	double cmp = LOWER;
 	//double cmpprev = LOWER-STEP;
-	std::vector<double[2]> zout(NUMSAMPLES);
+	std::vector<double> zout(NUMSAMPLES);
 	/*
 	for (int t=0; t<NUMSAMPLES; t++){
 
@@ -420,22 +420,37 @@ int main(int argc,char **argv)
 		//std::cout<<"cmp = "<<cmp<< std::endl;
 	}
 	*/
+    /*
 	#pragma omp parallel for
 	for(int t=0; t<NUMSAMPLES; t++){
-		zout[t][0]=LOWER + t*STEP;
-		zout[t][1]=Z(zout[t][0]);
+		cmp=LOWER + t*STEP;
+		zout[t]=Z(cmp);
 	}
 	#pragma omp parallel for
 	for(int t=1; t<NUMSAMPLES; t++){
 
-		if( ((zout[t][1]<0.0) and (zout[t-1][1]>0.0))
-		  or((zout[t][1]>0.0) and (zout[t-1][1]<0.0))){
+		if( ((zout[t]<0.0) and (zout[t-1]>0.0))
+		  or((zout[t]>0.0) and (zout[t-1]<0.0))){
 			#pragma omp atomic
 			count++;
 		}
 
 	}
+	*/
+	#pragma omp parallel for
+	for(int t=0; t<NUMSAMPLES; t++){
+		cmp=LOWER + t*STEP;
+		zout[t]=Z(cmp);
+	}
+	#pragma omp parallel for
+	for(int t=1; t<NUMSAMPLES; t++){
 
+		if( ((zout[t]<0.0) and (zout[t-1]>0.0))
+		  or((zout[t]>0.0) and (zout[t-1]<0.0))){
+			#pragma omp atomic
+			count++;
+		}
+	}
 
 /*	//for (double t=LOWER;t<=UPPER;t+=STEP){
 		double zout=Z(cmp,4);
