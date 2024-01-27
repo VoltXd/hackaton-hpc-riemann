@@ -232,22 +232,19 @@ double Z(double t)
 //*************************************************************************
 
 {
-	//double p; /* fractional part of sqrt(t/(2.0*pi))*/
-	//double C(int,double); /* coefficient of (2*pi/t)^(k*0.5) */
-	//const double pi = 3.1415926535897932385;
-	//double deuxpi = 2*pi;
+
 	double p = sqrt(t * invdeuxpi);
 	int N =(int) p;
 	p -= N;
-	int restN=N%4;
-	double epilogue=1.0;
+
 	const double z=2.0*p-1.0;
-//	const double deuxpiT=deuxpi/t;
+
 	double R = 0.0;
 	// ZZ part
+	int restN=N%4;
+	double epilogue=1.0;
 	double tt = theta(t);
 	double ZZ = 0.0;
-	//std::cout<<"N = "<<N<<std::endl;
 
 	for(double j=1; j<=N-restN;j+=4){
 
@@ -258,7 +255,6 @@ double Z(double t)
 		epilogue+=4;
 
 	}
-//	std::cout<<"restN = "<< restN <<std::endl;
 
 	for( epilogue; epilogue<=N;epilogue++){
                 ZZ+= 1/sqrt(epilogue) * cos(fmod(tt-t*log(epilogue),deuxpi));
@@ -409,63 +405,38 @@ int main(int argc,char **argv)
 	ui64   NUMSAMPLES=floor((UPPER-LOWER)*SAMP+1.0);
 	int count=0;
 	double t1=dml_micros();
-	double cmp = LOWER;
 	//double cmpprev = LOWER-STEP;
+	
 	std::vector<double> zout(NUMSAMPLES);
+	#pragma omp parallel for
+	for(ui64 t=0; t<NUMSAMPLES; t++){
+		double cmp=LOWER + t*STEP;
+		zout[t]=Z(cmp);
+	}
+	#pragma omp parallel for
+	for(ui64 t=1; t<NUMSAMPLES; t++){
+
+		if( ((zout[t]<0.0) and (zout[t-1]>0.0))
+		  or((zout[t]>0.0) and (zout[t-1]<0.0))){
+			#pragma omp atomic
+			count++;
+		}
+	}
+	
 	/*
-	for (int t=0; t<NUMSAMPLES; t++){
-
-		zout[t][0]=cmp;
-		cmp+=STEP;
-		//std::cout<<"cmp = "<<cmp<< std::endl;
-	}
-	*/
-    /*
 	#pragma omp parallel for
-	for(int t=0; t<NUMSAMPLES; t++){
-		cmp=LOWER + t*STEP;
-		zout[t]=Z(cmp);
-	}
-	#pragma omp parallel for
-	for(int t=1; t<NUMSAMPLES; t++){
-
-		if( ((zout[t]<0.0) and (zout[t-1]>0.0))
-		  or((zout[t]>0.0) and (zout[t-1]<0.0))){
-			#pragma omp atomic
-			count++;
-		}
-
-	}
-	*/
-	#pragma omp parallel for
-	for(int t=0; t<NUMSAMPLES; t++){
-		cmp=LOWER + t*STEP;
-		zout[t]=Z(cmp);
-	}
-	#pragma omp parallel for
-	for(int t=1; t<NUMSAMPLES; t++){
-
-		if( ((zout[t]<0.0) and (zout[t-1]>0.0))
-		  or((zout[t]>0.0) and (zout[t-1]<0.0))){
+	for(ui64 t=0; t<NUMSAMPLES; t++){
+		double cmp=LOWER + t*STEP;
+		double zout=Z(cmp);
+		double prev = Z(cmp-STEP);
+		if(((prev>0.0) && (zout<0.0)) || ((prev<0.0) && (zout>0.0)))
+		{
+			//printf("%20.6lf  %20.12lf %20.12lf\n",t,prev,zout);
 			#pragma omp atomic
 			count++;
 		}
 	}
-
-/*	//for (double t=LOWER;t<=UPPER;t+=STEP){
-		double zout=Z(cmp,4);
-		prev=Z(cmpprev,4);
-		if(t>LOWER){
-			if(   ((zout<0.0)and(prev>0.0))
-			    or((zout>0.0)and(prev<0.0))){
-				//printf("%20.6lf  %20.12lf %20.12lf\n",t,prev,zout);
-
-				count++;
-			}
-		}
-		cmpprev=cmp;
-		cmp+=STEP;
-*///	}
+	*/
 	double t2=dml_micros();
 	printf("I found %d Zeros in %.3lf seconds\n",count,(t2-t1)/1000000.0);
 	return(0);
