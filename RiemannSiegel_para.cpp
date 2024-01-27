@@ -405,8 +405,11 @@ int main(int argc,char **argv)
 	ui64   NUMSAMPLES=floor((UPPER-LOWER)*SAMP+1.0);
 	int count=0;
 	double t1=dml_micros();
-	//double cmpprev = LOWER-STEP;
 	
+	
+	#ifdef POST
+	// 1 - Parallélisation avec mémoire (besoin de beaucoup de RAM)
+	printf("méthode avec post-processing\n");
 	std::vector<double> zout(NUMSAMPLES);
 	#pragma omp parallel for
 	for(ui64 t=0; t<NUMSAMPLES; t++){
@@ -422,8 +425,9 @@ int main(int argc,char **argv)
 			count++;
 		}
 	}
-	
-	/*
+	#else 
+	// 2 - Parallélisation sans mémoire (plus de calcul)
+	printf("méthode sans post-processing \n");
 	#pragma omp parallel for
 	for(ui64 t=0; t<NUMSAMPLES; t++){
 		double cmp=LOWER + t*STEP;
@@ -436,7 +440,8 @@ int main(int argc,char **argv)
 			count++;
 		}
 	}
-	*/
+	#endif
+
 	double t2=dml_micros();
 	printf("I found %d Zeros in %.3lf seconds\n",count,(t2-t1)/1000000.0);
 	return(0);

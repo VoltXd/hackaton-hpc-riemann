@@ -20,22 +20,31 @@ BIN_NO_OPT= $(SRC_NO_OPT:.cpp=)
 all:
 	$(CXX) $(CFLAGS) $(SRC) -o $(BIN)
 
-# "make para" => Compile the parallelized file
+# "make para" => Compile the parallelized file without post-processing of zeros
 para:
 	$(CXX) $(CFLAGS_PARA) $(SRC_PARA) -o $(BIN_PARA)
 
+# "make para_post" => Compile the parallelized file with post-processing of zeros
+#										(take a lot of memory to run)
+para_post:
+	$(CXX) $(CFLAGS_PARA) -DPOST $(SRC_PARA) -o $(BIN_PARA)
 # "make no_opt" => Compile the base src file
 no_opt:
-	$(CXX) $(CFLAGS_NO_OPT) $(SRC_NO_OPT) -o $(BIN_NO_OPT)
+	$(CXX) $(CFLAGS_NO_OPT)  $(SRC_NO_OPT) -o $(BIN_NO_OPT)
 
 # "make asm" => Outputs the assembly of both files
 asm:
+
 	$(CXX) $(CFLAGS) -fverbose-asm $(SRC) -S
 	$(CXX) $(CFLAGS_NO_OPT) -fverbose-asm $(SRC_NO_OPT) -S
 
 # "make debug" => Compile with debug info
 debug:
 	$(CXX) $(CFLAGS) $(SRC) -g -o $(BIN)
+
+# "make para_g" => Compile parallelized with debug info
+para_g:
+	$(CXX) $(CFLAGS_PARA) $(SRC_PARA) -g -o $(BIN_PARA)
 
 # "make clean" => Clean build files
 clean: 
