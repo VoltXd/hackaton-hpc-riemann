@@ -248,10 +248,10 @@ double Z(double t)
 
 	for(double j=1; j<=N-restN;j+=4){
 
-		ZZ+= 1/sqrt(j) * cos(fmod(tt-t*log(j),deuxpi));
-		ZZ+= 1/sqrt(j+1) * cos(fmod(tt-t*log(j+1),deuxpi));
-		ZZ+= 1/sqrt(j+2) * cos(fmod(tt-t*log(j+2),deuxpi));
-		ZZ+= 1/sqrt(j+3) * cos(fmod(tt-t*log(j+3),deuxpi));
+		ZZ+= 1/sqrt(j) * cos(tt-t*log(j));
+		ZZ+= 1/sqrt(j+1) * cos(tt-t*log(j+1));
+		ZZ+= 1/sqrt(j+2) * cos(tt-t*log(j+2));
+		ZZ+= 1/sqrt(j+3) * cos(tt-t*log(j+3));
 		epilogue+=4;
 
 	}

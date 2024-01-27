@@ -36,6 +36,7 @@ no_opt:
 asm:
 
 	$(CXX) $(CFLAGS) -fverbose-asm $(SRC) -S
+	$(CXX) $(CFLAGS_PARA) -DPOST -fverbose-asm $(SRC_PARA) -S
 	$(CXX) $(CFLAGS_NO_OPT) -fverbose-asm $(SRC_NO_OPT) -S
 
 # "make debug" => Compile with debug info
