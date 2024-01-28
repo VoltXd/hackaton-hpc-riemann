@@ -4,4 +4,4 @@
 #SBATCH --cpus-per-task=64
 
 
-./RiemannSiegel_opti 10 10000 100
+./RiemannSiegel_para 10 100000 100
