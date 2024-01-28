@@ -25,7 +25,7 @@ para:
 	$(CXX) $(CFLAGS_PARA) $(SRC_PARA) -o $(BIN_PARA)
 
 # "make para_post" => Compile the parallelized file with post-processing of zeros
-#										(take a lot of memory to run)
+#										(takes a lot of memory to run)
 para_post:
 	$(CXX) $(CFLAGS_PARA) -DPOST $(SRC_PARA) -o $(BIN_PARA)
 # "make no_opt" => Compile the base src file

@@ -68,32 +68,29 @@ Compute time 1 year-core so an algortihm 10000*2*40 times more efficient than Ze
 typedef unsigned long      ui32;
 typedef unsigned long long ui64;
 
-constexpr double pi= 3.1415926535897932385;
-constexpr double deuxpi=2*pi;
-constexpr double invdeuxpi=1/deuxpi;
+constexpr double PI 		= 3.1415926535897932385;
+constexpr double PI2 		= 2.0 * PI;
+constexpr double INV_PI2 	= 1.0 / PI2;
 
 
 double dml_micros()
 {
-        static struct timezone tz;
-        static struct timeval  tv;
-        gettimeofday(&tv,&tz);
-        return((tv.tv_sec*1000000.0)+tv.tv_usec);
+	static struct timezone tz;
+	static struct timeval  tv;
+	gettimeofday(&tv,&tz);
+	return((tv.tv_sec*1000000.0)+tv.tv_usec);
 }
 
-int even(int n)
+inline double even(int n)
 {
-	return n & 1 ? -1 : 1 ;
-	//if (n%2 == 0) return(1);
-	//else          return(-1);
+	return n & 1 ? -1.0 : 1.0;
 }
 
-double theta(double t)
+inline double theta(double t)
 {
-	//const double pi = 3.1415926535897932385;
-	double t_inv = 1.0/ t;
-	double t_inv2 = t_inv*t_inv;
- 	return (t*0.5*log(t*invdeuxpi) - t*0.5 - pi*0.125 +t_inv*( 1/48.0 + t_inv2*( 7.0/5760.0 + t_inv2*( 31.0/80640 +t_inv2*( 127.0/430080.0 + t_inv2*(511.0/1216512.0 ))))) );
+	double t_inv 	= 1.0 / t;
+	double t_inv2 	= t_inv * t_inv;
+ 	return t*0.5*(log(t*INV_PI2) - 1.0) - PI*0.125 + t_inv*(1.0/48.0 + t_inv2*(7.0/5760.0 + t_inv2*(31.0/80640.0 + t_inv2*(127.0/430080.0 + t_inv2*(511.0/1216512.0)))));
 	//https://oeis.org/A282898  // numerators
 	//https://oeis.org/A114721  // denominators
 }
@@ -230,46 +227,43 @@ double Z(double t)
 // Riemann-Siegel Z(t) function implemented per the Riemenn Siegel formula.
 // See http://mathworld.wolfram.com/Riemann-SiegelFormula.html for details
 //*************************************************************************
-
 {
-
-	double p = sqrt(t * invdeuxpi);
-	int N =(int) p;
+	double p = sqrt(t * INV_PI2);
+	const int N = (int)p;
 	p -= N;
 
-	const double z=2.0*p-1.0;
 
-	double R = 0.0;
 	// ZZ part
-	int restN=N%4;
-	double epilogue=1.0;
+	const int restN = N % 4;
+	double epilogue = 1.0;
 	double tt = theta(t);
+
 	double ZZ = 0.0;
-
-	for(double j=1; j<=N-restN;j+=4){
-
-		ZZ+= 1/sqrt(j) * cos(tt-t*log(j));
-		ZZ+= 1/sqrt(j+1) * cos(tt-t*log(j+1));
-		ZZ+= 1/sqrt(j+2) * cos(tt-t*log(j+2));
-		ZZ+= 1/sqrt(j+3) * cos(tt-t*log(j+3));
-		epilogue+=4;
-
+	for(double j = 1.0; j <= N-restN; j += 4.0, epilogue += 4.0)
+	{
+		ZZ += 1.0/sqrt(j	) * cos(tt-t*log(j    ));
+		ZZ += 1.0/sqrt(j+1.0) * cos(tt-t*log(j+1.0));
+		ZZ += 1.0/sqrt(j+2.0) * cos(tt-t*log(j+2.0));
+		ZZ += 1.0/sqrt(j+3.0) * cos(tt-t*log(j+3.0));
 	}
 
-	for( epilogue; epilogue<=N;epilogue++){
-                ZZ+= 1/sqrt(epilogue) * cos(fmod(tt-t*log(epilogue),deuxpi));
-	}
-
+	for(; epilogue<=N;epilogue++)
+		ZZ += 1.0/sqrt(epilogue) * cos(tt-t*log(epilogue));
 	ZZ += ZZ; 
 
 	// R part
-	R+= C(0,z);
-	R+= C(1,z) * sqrt(deuxpi/t);
-	R+= C(2,z) * deuxpi/t;
-	R+= C(3,z) * deuxpi * sqrt(deuxpi/t);
-	R+= C(4,z) * deuxpi/t * deuxpi/t;
+	const double z=2.0*p-1.0;
+	const double PI2_T = PI2 / t;
+	const double SQRT_PI2_T = sqrt(PI2_T);
 
-	R = even(N-1) * pow(deuxpi / t,0.25) * R; 
+	double R = 0.0;
+	R+= C(0,z);
+	R+= C(1,z) * SQRT_PI2_T;
+	R+= C(2,z) * PI2_T;
+	R+= C(3,z) * PI2_T * SQRT_PI2_T;
+	R+= C(4,z) * PI2_T * PI2_T;
+	R *= even(N-1) * sqrt(SQRT_PI2_T); 
+
 	return(ZZ + R);
 }
 
@@ -398,7 +392,7 @@ int main(int argc,char **argv)
                 std::cout << argv[0] << " START END SAMPLING" << std::endl;
                 return -1;
         }
-	float estimate_zeros=theta(UPPER)/pi;
+	float estimate_zeros=theta(UPPER)/PI;
 	printf("I estimate I will find %1.3lf zeros\n",estimate_zeros);
 
 	double STEP = 1.0/SAMP;
