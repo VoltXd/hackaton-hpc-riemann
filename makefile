@@ -28,6 +28,8 @@ para:
 #										(takes a lot of memory to run)
 para_post:
 	$(CXX) $(CFLAGS_PARA) -DPOST $(SRC_PARA) -o $(BIN_PARA)
+para_buffer:
+	$(CXX) $(CFLAGS_PARA) -DBUFFER $(SRC_PARA) -o $(BIN_PARA)
 # "make no_opt" => Compile the base src file
 no_opt:
 	$(CXX) $(CFLAGS_NO_OPT)  $(SRC_NO_OPT) -o $(BIN_NO_OPT)

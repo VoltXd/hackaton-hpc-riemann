@@ -72,6 +72,8 @@ constexpr double PI 		= 3.1415926535897932385;
 constexpr double PI2 		= 2.0 * PI;
 constexpr double INV_PI2 	= 1.0 / PI2;
 
+constexpr uint32_t Z_BUFFER_LENGTH = 33554432U; // 32 Mdouble (=> 256 MB buffer)
+
 
 double dml_micros()
 {
@@ -397,11 +399,11 @@ int main(int argc,char **argv)
 
 	double STEP = 1.0/SAMP;
 	ui64   NUMSAMPLES=floor((UPPER-LOWER)*SAMP+1.0);
-	int count=0;
+	ui64   count=0;
 	double t1=dml_micros();
 	
 	
-	#ifdef POST
+#ifdef POST
 	// 1 - Parallélisation avec mémoire (besoin de beaucoup de RAM)
 	printf("méthode avec post-processing\n");
 	std::vector<double> zout(NUMSAMPLES);
@@ -419,7 +421,43 @@ int main(int argc,char **argv)
 			count++;
 		}
 	}
-	#else 
+#else 
+#ifdef BUFFER
+	// 3 - Parallélisation avec buffer (implique de faire des pauses, mais plus de problèmes de mémoire) (Implique un calcul redondant rare [1 / Z_BUFFER_LENGTH])
+	std::vector<double> zout(Z_BUFFER_LENGTH);
+	for (ui64 idx = 0; idx < NUMSAMPLES; idx += Z_BUFFER_LENGTH)
+	{
+		const uint32_t newLimit = idx + Z_BUFFER_LENGTH < NUMSAMPLES ? Z_BUFFER_LENGTH : NUMSAMPLES % Z_BUFFER_LENGTH;
+
+		// Zeta calculations
+		#pragma omp parallel for
+		for(ui64 t = 0; t < newLimit; t++)
+		{
+			double cmp=LOWER + (t+idx) * STEP;
+			zout[t]=Z(cmp);
+		}
+		
+		// Zeros count
+		#pragma omp parallel for reduction(+:count)
+		for(ui64 i = 1; i < newLimit; i++)
+		{
+			if( ((zout[i]<0.0) and (zout[i-1]>0.0))
+			  or((zout[i]>0.0) and (zout[i-1]<0.0))){
+				count++;
+			}
+		}
+
+		// "Head & tail" connection
+		if (newLimit == Z_BUFFER_LENGTH) 
+		{
+			double z_limit = Z(LOWER + STEP * (newLimit+idx));
+			if( ((z_limit<0.0) and (zout[Z_BUFFER_LENGTH - 1]>0.0))
+				or((z_limit>0.0) and (zout[Z_BUFFER_LENGTH - 1]<0.0)))
+					count++;
+
+		}
+	}
+#else
 	// 2 - Parallélisation sans mémoire (plus de calcul)
 	printf("méthode sans post-processing \n");
 	#pragma omp parallel for
@@ -434,7 +472,8 @@ int main(int argc,char **argv)
 			count++;
 		}
 	}
-	#endif
+#endif
+#endif
 
 	double t2=dml_micros();
 	printf("I found %d Zeros in %.3lf seconds\n",count,(t2-t1)/1000000.0);
